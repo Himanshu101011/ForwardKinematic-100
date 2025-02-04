@@ -1,43 +1,44 @@
 % MATLAB Code: Forward Kinematics for an n-Link Manipulator
-function forward_kinematics_DH(DH_params, joint_types)
-  
-    % Get the number of joints
-    num_joints = size(DH_params, 1);
+function forward_kinematics_DH(Parameters, joint_types)
 
-    % Identity matrix as the initial transformation matrix
+    % Number of links
+    n = size(Parameters, 1);
+
+    % Identity matrix as the initial transformation
     T = eye(4);
 
     % Store joint positions for visualization
-    joint_positions = zeros(num_joints + 1, 3);
+    joint_positions = zeros(n+1, 3);  % Including base
 
-    % Create figure for visualization
+    % Initialize figure for visualization
     figure;
     hold on;
 
     grid on;
     xlabel('X-axis'); ylabel('Y-axis'); zlabel('Z-axis');
     title('Forward Kinematics - n-Link Manipulator');
-    view(3);  % Set 3D view
+
+    view(3);  % Set 3D perspective
 
     % Loop through each joint and calculate transformations
-    for i = 1:num_joints
-        % Extract D-H parameters for the current joint
-        theta = DH_params(i, 1);  % Joint angle (degrees)
-        d = DH_params(i, 2);      % Joint offset (meters)
-        a = DH_params(i, 3);      % Link length (meters)
-        alpha = DH_params(i, 4);  % Link twist (degrees)
+    for i = 1:n
+        % Extract D-H parameters
+        theta = Parameters(i, 1);  % Joint angle (degrees)
+        d = Parameters(i, 2);      % Joint offset (meters)
+        a = Parameters(i, 3);      % Link length (meters)
+        alpha = Parameters(i, 4);  % Link twist (degrees)
 
         % Convert angles from degrees to radians
         theta = deg2rad(theta);
         alpha = deg2rad(alpha);
 
-        % Adjust the transformation based on joint type
+        % Adjust based on joint type
         if joint_types{i} == 'P'
-            d = d;  % Prismatic joint: d is variable
+            d = Parameters(i, 2);  % d is variable
         elseif joint_types{i} == 'R'
-            theta = theta;  % Revolute joint: theta is variable
+            theta = theta;  % θ is variable
         else
-            error('Invalid joint type. Use "R" for revolute or "P" for prismatic.');
+            error('Invalid joint type! Use "R" for revolute or "P" for prismatic.');
         end
 
         % Compute the transformation matrix using D-H parameters
@@ -46,16 +47,16 @@ function forward_kinematics_DH(DH_params, joint_types)
                0,           sin(alpha),            cos(alpha),            d;
                0,           0,                     0,                     1];
 
-        % Update the overall transformation matrix
+        % Update the cumulative transformation matrix
         T = T * A_i;
 
-        % Store joint position for visualization
-        joint_positions(i + 1, :) = T(1:3, 4)';
+        % Store joint position
+        joint_positions(i+1, :) = T(1:3, 4)';
 
         % Plot the link
-        plot3([joint_positions(i, 1), joint_positions(i + 1, 1)], ...
-              [joint_positions(i, 2), joint_positions(i + 1, 2)], ...
-              [joint_positions(i, 3), joint_positions(i + 1, 3)], 'bo-', 'LineWidth', 2);
+        plot3([joint_positions(i, 1), joint_positions(i+1, 1)], ...
+              [joint_positions(i, 2), joint_positions(i+1, 2)], ...
+              [joint_positions(i, 3), joint_positions(i+1, 3)], 'bo-', 'LineWidth', 2);
     end
 
     % Plot all joint positions
@@ -69,11 +70,3 @@ function forward_kinematics_DH(DH_params, joint_types)
     disp('Final Transformation Matrix (End-Effector Position & Orientation):');
     disp(T);
 end
-DH_params = [0, 1, 0.5, 90;  % Link 1
-             0, 0, 0.5, 0];   % Link 2
-
-% Define Joint Types ('R' for revolute, 'P' for prismatic)
-joint_types = {'R', 'R'};
-
-% Call the function
-forward_kinematics_DH(DH_params, joint_types);
