@@ -1,3 +1,4 @@
+% MATLAB Code: Forward Kinematics for an n-Link Manipulator
 function forward_kinematics_DH(DH_params, joint_types)
   
     % Get the number of joints
